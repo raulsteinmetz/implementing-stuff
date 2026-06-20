@@ -1,0 +1,12 @@
+seed: 42
+
+dataset:
+  val_split: .2
+
+train:
+  batch_size: 64
+
+mlp:
+  epochs: 10
+  layer_sizes: [128, 256, 512, 256, 128]
+  lr: 0.001
