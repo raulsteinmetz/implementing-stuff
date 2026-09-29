@@ -1,3 +1,7 @@
+'''
+	Ideally will load text, train a transformer on it, generate new text
+'''
+
 from data import get_corpus, clean_text
 from tokenizer import build_tokenizer
 

@@ -1,10 +1,15 @@
-''' BPE tokenizer '''
+''' 
+    BPE tokenizer creation and class.
+'''
 
 import os
 import hashlib
 import json
 
 def _merge_one(tokens, merge):
+	'''
+        Iterates tokens and merges the desired two tokens into a new one.
+	'''
 	old_tokens = tokens
 	tokens = []
 	i = 0
@@ -18,26 +23,35 @@ def _merge_one(tokens, merge):
 	return tokens
 
 class Tokenizer:
-	def __init__(self, base_chars, merge_order):
-		# 1. Create dictionaries
-		self.text_to_token = {char: token for token, char in enumerate(base_chars)} # for tokenize
-		self.token_to_text = {token:char for token, char in enumerate(base_chars)} # for detokenize, start with base
-		for merged_id, to_merge in merge_order: # add merged_ids and their correspondance in text
-			self.token_to_text[merged_id] = self.token_to_text[to_merge[0]] + self.token_to_text[to_merge[1]]
+    '''
+        Tokenizes and detokenizes text.
+    '''
+	
+    def __init__(self, base_chars, merge_order):
+        # 1. Create dictionaries
+        self.text_to_token = {char: token for token, char in enumerate(base_chars)} # for tokenize
+        self.token_to_text = {token:char for token, char in enumerate(base_chars)} # for detokenize, start with base
+        for merged_id, to_merge in merge_order: # add merged_ids and their correspondance in text
+            self.token_to_text[merged_id] = self.token_to_text[to_merge[0]] + self.token_to_text[to_merge[1]]
 
-		# 2. Save merge order as an attribute of the class 
-		self.merge_order = [(merged_id, tuple(list_pair)) for merged_id, list_pair in merge_order] # json converts tuples to lists, so we are reversing it here
+        # 2. Save merge order as an attribute of the class 
+        self.merge_order = [(merged_id, tuple(list_pair)) for merged_id, list_pair in merge_order] # json converts tuples to lists, so we are reversing it here
 
-	def tokenize(self, text):
-		# Repeat the tokenizer creation process, except we already know which tokens to merge in which order
-		tokens = [self.text_to_token[char] for char in text] # initial translation using base chars
-		for merge in self.merge_order: # follow the merge order, explanation in the build_tokenizer() function 
-				tokens = _merge_one(tokens, merge)
+    def tokenize(self, text):
+        '''
+            Transforms a string into a list of tokens (integer indices)
+        '''
+        # Repeat the tokenizer creation process, except we already know which tokens to merge in which order
+        tokens = [self.text_to_token[char] for char in text] # initial translation using base chars
+        for merge in self.merge_order: # follow the merge order, explanation in the build_tokenizer() function 
+                tokens = _merge_one(tokens, merge)
+        return tokens
 
-		return tokens
-
-	def detokenize(self, tokens):
-		return ''.join([self.token_to_text[token] for token in tokens])
+    def detokenize(self, tokens):
+        '''
+            Transformes a list of tokens (integer indices) into a string
+        '''
+        return ''.join([self.token_to_text[token] for token in tokens])
 
 def build_tokenizer(corpus, vocab_size):
 	'''

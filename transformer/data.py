@@ -1,4 +1,6 @@
-''' Data loading and cleaning functions for the corpus'''
+''' 
+    Data loading and cleaning functions for the corpus
+'''
 
 import unicodedata
 
