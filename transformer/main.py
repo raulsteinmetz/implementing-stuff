@@ -38,15 +38,40 @@ def clean_text(corpus):
 
 # ---- Tokenization ----
 
+def _merge_one(tokens, merge):
+	old_tokens = tokens
+	tokens = []
+	i = 0
+	while i < len(old_tokens):
+		if (i < len(old_tokens) - 1 and (old_tokens[i], old_tokens[i + 1]) == merge[1]):
+			tokens.append(merge[0])
+			i += 2
+		else:
+			tokens.append(old_tokens[i])
+			i += 1
+	return tokens
+
 class Tokenizer:
 	def __init__(self, base_chars, merge_order):
-		pass
+		# 1. Create dictionaries
+		self.text_to_token = {char: token for token, char in enumerate(base_chars)} # for tokenize
+		self.token_to_text = {token:char for token, char in enumerate(base_chars)} # for detokenize, start with base
+		for merged_id, to_merge in merge_order: # add merged_ids and their correspondance in text
+			self.token_to_text[merged_id] = self.token_to_text[to_merge[0]] + self.token_to_text[to_merge[1]]
+
+		# 2. Save merge order as an attribute of the class 
+		self.merge_order = [(merged_id, tuple(list_pair)) for merged_id, list_pair in merge_order] # json converts tuples to lists, so we are reversing it here
 
 	def tokenize(self, text):
-		pass
+		# Repeat the tokenizer creation process, except we already know which tokens to merge in which order
+		tokens = [self.text_to_token[char] for char in text] # initial translation using base chars
+		for merge in self.merge_order: # follow the merge order, explanation in the build_tokenizer() function 
+				tokens = _merge_one(tokens, merge)
+
+		return tokens
 
 	def detokenize(self, tokens):
-		pass
+		return ''.join([self.token_to_text[token] for token in tokens])
 
 def build_tokenizer(corpus):
 	'''
@@ -96,17 +121,7 @@ def build_tokenizer(corpus):
 		new_token = len(base_chars) + len(merge_order)
 
 		# 3. Replace pair occurance with new token 
-		old_tokens = tokens
-		tokens = []
-		i = 0
-		while i < len(old_tokens):
-			if (i < len(old_tokens) - 1 and (old_tokens[i], old_tokens[i + 1]) == most_frequent):
-				tokens.append(new_token)
-				i += 2
-			else:
-				tokens.append(old_tokens[i])
-				i += 1
-
+		tokens = _merge_one(tokens, (new_token, most_frequent))
 		merge_order.append((new_token, most_frequent))
 
 	# ---- Save tokenizer ----
@@ -120,10 +135,9 @@ def build_tokenizer(corpus):
 	with open('./tokenizer.json', 'w') as f:
 		json.dump(tokenizer_data, f)
 	return Tokenizer(
-		tokenizer_data['base_chars'],
-		tokenizer_data['merge_order']
-	)
-
+			tokenizer_data['base_chars'],
+			tokenizer_data['merge_order']
+		)
 
 def main():
 	'''
@@ -142,7 +156,8 @@ def main():
 	print('[main] Tokenizer retrieved.')
 
 	# tokenizer test
-	# [...]
+	print(corpus == tokenizer.detokenize(tokenizer.tokenize(corpus)))
+	print(len(tokenizer.tokenize(corpus)) < len(corpus))
 
 if __name__ == '__main__':
 	main()
