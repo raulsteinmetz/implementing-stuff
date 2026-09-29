@@ -217,4 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-venv/
+
+# mine
+transformer/corpus.txt
+transformer/tokenizer.json
